@@ -1,6 +1,28 @@
 shadowsocks
 ===========
 
+It is forked from https://github.com/clowwindy/shadowsocks.
+Used to change the password for one port(user) immediately,
+I use redis to store the password.
+
+For exmaple, you can modify the config.json like shadowsocks/config.json.redis.
+And then sadd :
+```
+sadd shadowsocks_redis 8388
+sadd shadowsocks_redis 8389
+
+```
+Then you need to add the password for the port:
+```
+set shadowsocks_redis_port_8388 UniqueStudio
+set shadowsocks_redis_port_8389 BinHe
+
+```
+
+Now you can run the server.
+
+And you can change the password and do not need to restart shadowsocks.
+
 [![PyPI version]][PyPI] [![Build Status]][Travis CI] 
 
 Current version: 2.0-pre

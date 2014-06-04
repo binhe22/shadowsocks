@@ -29,16 +29,29 @@ import encrypt
 import eventloop
 import tcprelay
 import udprelay
-
+from redis_pool import redis_pool
 
 def main():
     utils.check_python()
 
     config = utils.get_config(False)
-
+    config["redis_on"] = 0
+    
     utils.print_shadowsocks()
 
-    if config['port_password']:
+    if config.get("redis_addr") and config.get("redis_port") and config.get("redis_db") >=0:
+        logging.warn("warning:redis config will use; others will be ignored")
+        rp = redis_pool(config["redis_addr"], config["redis_port"], config["redis_password"], config["redis_db"])
+        r = rp.get_redis()
+        if not r.ping():
+            logging.error("redis config error")
+            sys.exit(1)
+        config["port_password"] = {}
+        ports = r.smembers("shadowsocks_redis")
+        for i in ports:
+            config["port_password"][i] = rp.get_port_password(i)
+        config["redis_on"] = 1
+    elif config['port_password']:
         if config['server_port'] or config['password']:
             logging.warn('warning: port_password should not be used with '
                          'server_port and password. server_port and password '
@@ -46,10 +59,16 @@ def main():
     else:
         config['port_password'] = {}
         config['port_password'][str(config['server_port'])] = config['password']
+    
 
+    
     encrypt.init_table(config['password'], config['method'])
     tcp_servers = []
     udp_servers = []
+    
+    
+
+
     for port, password in config['port_password'].items():
         a_config = config.copy()
         a_config['server_port'] = int(port)

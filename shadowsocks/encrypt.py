@@ -27,7 +27,7 @@ import string
 import struct
 import logging
 import encrypt_salsa20
-
+import redis
 
 def random_string(length):
     try:
@@ -193,8 +193,7 @@ class Encryptor(object):
                 if len(buf) == 0:
                     return buf
             return self.decipher.update(buf)
-
-
+"""
 def encrypt_all(password, method, op, data):
     if method is not None and method.lower() == 'table':
         method = None
@@ -224,3 +223,4 @@ def encrypt_all(password, method, op, data):
         if f:
             result.append(f)
         return ''.join(result)
+"""

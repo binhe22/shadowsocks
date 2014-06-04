@@ -29,7 +29,7 @@ import logging
 import encrypt
 import eventloop
 from common import parse_header
-
+from redis_pool import redis_pool
 
 TIMEOUTS_CLEAN_SIZE = 512
 TIMEOUT_PRECISION = 4
@@ -418,7 +418,8 @@ class TCPRelay(object):
         self._timeout_offset = 0  # last checked position for timeout
                                   # we trim the timeouts once a while
         self._handler_to_timeouts = {}  # key: handler value: index in timeouts
-
+        if self._config["redis_on"]:
+            self.rp = redis_pool(config["redis_addr"], config["redis_port"], config["redis_password"], config["redis_db"])
         if is_local:
             listen_addr = config['local_address']
             listen_port = config['local_port']
@@ -476,7 +477,7 @@ class TCPRelay(object):
         self._handler_to_timeouts[hash(handler)] = length
 
     def _sweep_timeout(self):
-        # tornado's timeout memory management is more flexible that we need
+        # tornado's timeout memory management is more flexible than we need
         # we just need a sorted last_activity queue and it's faster than heapq
         # in fact we can do O(1) insertion/remove so we invent our own
         if self._timeouts:
@@ -519,7 +520,9 @@ class TCPRelay(object):
                     raise Exception('server_socket error')
                 try:
                     # logging.debug('accept')
-                    conn = self._server_socket.accept()
+                    if self._config["redis_on"]:
+                        self._config["password"] = self.rp.get_port_password(str(self._config["server_port"]))
+                    conn = self._server_socket.accept() 
                     TCPRelayHandler(self, self._fd_to_handlers, self._eventloop,
                                     conn[0], self._config, self._is_local)
                 except (OSError, IOError) as e:
