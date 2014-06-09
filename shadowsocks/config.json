@@ -14,7 +14,7 @@
         "8388": "foobar8",
         "8389": "foobar9"
     },
-    "timeout": 60,
+    "timeout": 300,
     "method": "aes-256-cfb",
     "redis_addr":"127.0.0.1",
     "redis_db":0,
